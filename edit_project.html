@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit project</title>
+</head>
+<body>
+    <form action="/edit_project/{{project.0}}" method="POST">
+        <input type="text" name="project_title" id="" value="{{project.1}}"><br><br>
+        <input type="date" name="start_date" id="" value="{{project.2}}"><br><br>
+        <input type="date" name="end_date" id="" value="{{project.3}}"><br><br>
+        <input type="text" name="description" id="" value="{{project.4}}"><br><br>
+        <input type="url" name="link" id="" value="{{project.5}}"><br><br>
+        <!--screen recording-->
+        <input type="file" name="file" autocomplete="off" required>
+        <input type="submit" value="Edit project">
+</body>
+</html>
