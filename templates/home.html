@@ -7,26 +7,40 @@
     <title>Document</title>
 </head>
 <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+    <form action="/logout">
+        <input type="submit" value="logout">
+    </form>
+    <form action="/change_password" method="get">
+        <input type="submit" value="change password">
+    </form>
     <form action="/add_project" method="get">
         <input type="submit" value="Add project">
     </form><br><br>
+        <!-- <a href="{{ 'add_project' }}">Add project</a> -->
     
     {% if project %}
     {% for i in range(0,len) %} 
-    <div ng-attr-id="{{ project[i].0 }}">
+    
         <p>Project title : {{ project[i].1 }} <br>
             Start date : {{ project[i].2 }} <br>
             End date : {{ project[i].3 }} <br>
             Description : {{ project[i].4 }} <br>
             Project link : <a href="{{ project[i].5 }}">{{ project[i].5 }}</a>
+            
             </p>
             {% if project[i].6 %}
-	<div>
+	
 		<video height="400px" width="400px" autoplay="autoplay" controls="controls" preload="preload">
 			<source src="{{ url_for('display', filename=project[i].6) }}" type="video/mp4"></source>
 		</video>
 	</div>
 {% endif %}
+
     <form action="/edit_project/{{project[i].0}}" method="get">
     <input type="submit" value="EDIT">
     </form> <br>
