@@ -39,6 +39,31 @@ def login():
 def logout():
     session["name"] = None
     return redirect("/")
+@app.route("/change_password",methods=["GET","POST"])
+def change_password():
+    reg="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{8,15}$"
+    pat=re.compile(reg)
+    if request.method=="POST":
+        uname=session.get('name')
+        pwd=request.form["password"]
+        confirm=request.form["confirm"]
+        mat=re.search(pat,pwd)
+        if mat:
+            pwd=bcrypt.generate_password_hash(pwd).decode('utf-8')
+            if(bcrypt.check_password_hash(pwd,confirm)):
+                        cur.execute("UPDATE login  SET password=%s WHERE uname=%s",(pwd,uname))
+                        con.commit()
+                        flash('password changed successfully')
+                        return redirect('/home')      
+            else:
+                    flash('password and confirm password must match','danger')
+        else:
+                flash('password must contain atleast 8 characters,it should contain atleast one uppercase,one lowercase,one special character and one digit.Maximum length of password is 15')
+        return render_template('change_passwordcd.html')
+    else:
+        return render_template('change_password.html')    
+
+
 @app.route('/register')
 def register():
     return render_template('register.html')
@@ -46,11 +71,10 @@ def register():
 def register1():
     reg="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{8,15}$"
     pat=re.compile(reg)
-   
-     
     if request.method=="POST":
         uname=request.form["uname"]
         session["name"] = uname
+    
         cur.execute("SELECT * FROM login WHERE uname=%s",[uname])
         log=cur.fetchall()
         if(log):
@@ -72,8 +96,6 @@ def register1():
             else:
                 flash('password must contain atleast 8 characters,it should contain atleast one uppercase,one lowercase,one special character and one digit.Maximum length of password is 15')
             return render_template('register.html')
-    
-    
     return render_template('register.html')    
 
 
@@ -83,7 +105,7 @@ cur1 = con1.cursor()
 @app.route("/home")
 def home():
     user=session.get('name')
-    cur1.execute("SELECT * FROM projects WHERE user=%s",[user])
+    cur1.execute("SELECT * FROM projects WHERE user=%s",(user,))
     obj=cur1.fetchall()
     # print(obj)
     return render_template("home.html",project=obj,len=len(obj))
@@ -105,6 +127,7 @@ def add_project():
             return redirect(request.url)
         else:
             filename=secure_filename(file.filename)
+            # print(filename)
             file.save(os.path.join(app.config['UPLOADS'],filename))
             
         cur1.execute("insert into projects(project_title,start_date,end_date,description,link,filename,user) values(%s,%s,%s,%s,%s,%s,%s)",(project_title,start_date,end_date,description,link,filename,user))
@@ -119,37 +142,40 @@ def add_project():
 @app.route('/display/<filename>')
 def display(filename):
     return redirect(url_for('static', filename='uploads/' + filename), code=301)
-
-
 @app.route('/edit_project/<string:id>', methods=['GET','POST'])
 def edit_project(id):
     if request.method == 'POST':
+        print('edit')
         project_title = request.form['project_title']
         start_date = request.form['start_date']
         end_date  = request.form['end_date']
         description = request.form['description']
         link = request.form['link']
         user=session.get('name')
-        
+  
         cur1.execute("DELETE FROM projects WHERE project_id=%s",(id,))
         con1.commit()
-        if 'file' not in request.files:
-            return redirect(request.url)
+        
         file=request.files['file']
-        if file.filename=='':
-            return redirect(request.url)
-        else:
-            filename=secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOADS'],filename))
-            
+        filename=secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOADS'],filename))
+           
+
+        
         cur1.execute("insert into projects(project_title,start_date,end_date,description,link,filename,user) values(%s,%s,%s,%s,%s,%s,%s)",(project_title,start_date,end_date,description,link,filename,user))
         con1.commit()
 
-        cur1.execute("SELECT * FROM projects where user=%s",[user])
+        cur1.execute("SELECT * FROM projects where user=%s",(user,))
         obj=cur1.fetchall()
-        return redirect("/home")
+        print(obj)
+        return render_template("home.html",project=obj,len=len(obj),filename=filename)
+
     else:
-        return render_template("add_project.html")
+        cur1.execute("SELECT * FROM projects WHERE user=%s",(session.get('name'),))
+        obj=cur1.fetchall()
+        print(obj)
+        return render_template("edit_project.html",project=obj[0])
+        
 
 
 @app.route('/del_project/<string:id>', methods=['GET'])
