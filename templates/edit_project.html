@@ -7,7 +7,7 @@
     <title>Edit project</title>
 </head>
 <body>
-    <form action="/edit_project/{{project.0}}" method="POST">
+    <form action="/edit_project/{{project.0}}" method="POST" enctype="multipart/form-data">
         <input type="text" name="project_title" id="" value="{{project.1}}"><br><br>
         <input type="date" name="start_date" id="" value="{{project.2}}"><br><br>
         <input type="date" name="end_date" id="" value="{{project.3}}"><br><br>
