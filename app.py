@@ -31,9 +31,9 @@ def login():
             if(bcrypt.check_password_hash(log,pwd)):
                 return redirect('/home')
             else:
-                flash('wrong password','danger')
+                flash('wrong password','password')
         else:
-            flash('invalid user','danger')
+            flash('invalid user','uname')
     return render_template('login.html')
 @app.route("/logout")
 def logout():
@@ -41,35 +41,38 @@ def logout():
     return redirect("/")
 @app.route("/change_password",methods=["GET","POST"])
 def change_password():
-    reg="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{8,15}$"
+    reg="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{6,10}$"
     pat=re.compile(reg)
     if request.method=="POST":
         uname=session.get('name')
         pwd=request.form["password"]
         confirm=request.form["confirm"]
         mat=re.search(pat,pwd)
-        if mat:
-            pwd=bcrypt.generate_password_hash(pwd).decode('utf-8')
-            if(bcrypt.check_password_hash(pwd,confirm)):
-                        cur.execute("UPDATE login  SET password=%s WHERE uname=%s",(pwd,uname))
-                        con.commit()
-                        flash('password changed successfully')
-                        return redirect('/home')      
-            else:
-                    flash('password and confirm password must match','danger')
+        if(len(pwd)<8):
+            flash('password must contain atleast 6 characters','pswd')
+        elif(len(pwd)>10):
+            flash('Maximum length of password is 10','pswd')
         else:
-                flash('password must contain atleast 8 characters,it should contain atleast one uppercase,one lowercase,one special character and one digit.Maximum length of password is 15')
-        return render_template('change_passwordcd.html')
+            if mat:
+                pwd=bcrypt.generate_password_hash(pwd).decode('utf-8')
+                if(bcrypt.check_password_hash(pwd,confirm)):
+                            cur.execute("UPDATE login  SET password=%s WHERE uname=%s",(pwd,uname))
+                            con.commit()
+                            flash('password changed successfully')
+                            return redirect('/home')      
+                else:
+                        flash('password and confirm password must match','confirm')
+            else:
+                    flash('password must contain atleast one uppercase,one lowercase,one special character and one digit.','pswd')
+            return render_template('change_password.html')
     else:
         return render_template('change_password.html')    
-
-
 @app.route('/register')
 def register():
-    return render_template('register.html')
+    return render_template("login.html")
 @app.route('/register1',methods=["GET","POST"])
 def register1():
-    reg="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{8,15}$"
+    reg="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{6,10}$"
     pat=re.compile(reg)
     if request.method=="POST":
         uname=request.form["uname"]
@@ -78,25 +81,30 @@ def register1():
         cur.execute("SELECT * FROM login WHERE uname=%s",[uname])
         log=cur.fetchall()
         if(log):
-            flash("user already exists")
-            return render_template('register.html')
+            flash("user already exists",'uname')
+            return render_template('login.html')
 
         else:
             pwd=request.form["password"]
             confirm=request.form["confirm"]
-            mat=re.search(pat,pwd)
-            if mat:
-                pwd=bcrypt.generate_password_hash(pwd).decode('utf-8')
-                if(bcrypt.check_password_hash(pwd,confirm)):
-                        cur.execute("INSERT INTO login(uname,password) VALUES(%s,%s)",(uname,pwd))
-                        con.commit()
-                        return redirect('/home')      
-                else:
-                    flash('password and confirm password must match','danger')
+            if(len(pwd)<6):
+                flash('password must contain atleast 6 characters','pswd')
+            elif(len(pwd)>10):
+                flash('Maximum length of password is 10','pswd')
             else:
-                flash('password must contain atleast 8 characters,it should contain atleast one uppercase,one lowercase,one special character and one digit.Maximum length of password is 15')
-            return render_template('register.html')
-    return render_template('register.html')    
+                mat=re.search(pat,pwd)
+                if mat:
+                    pwd=bcrypt.generate_password_hash(pwd).decode('utf-8')
+                    if(bcrypt.check_password_hash(pwd,confirm)):
+                            cur.execute("INSERT INTO login(uname,password) VALUES(%s,%s)",(uname,pwd))
+                            con.commit()
+                            return redirect('/home')      
+                    else:
+                        flash('password and confirm password must match','confirm')
+                else:
+                    flash('password must contain atleast one uppercase,one lowercase,one special character and one digit.','pswd')
+                return render_template('login.html')
+    return render_template('login.html')    
 
 
 con1 = connect(host = 'localhost', port=3306, database='pms',  user='root')
@@ -182,10 +190,14 @@ def edit_project(id):
 def del_project(id):
     cur1.execute('SELECT filename FROM projects WHERE project_id=%s',(id,))
     filename=cur1.fetchall()
+    filename=str(filename[0])[2:-3]
+    cur1.execute("SELECT COUNT(filename) FROM projects WHERE filename=%s",(filename,))
+    count=cur1.fetchall()
+    print(count)
     cur1.execute("DELETE FROM projects WHERE project_id=%s",(id,))
     con1.commit()
-    filename=str(filename[0])[2:-3]
-    os.remove(os.path.join(app.config['UPLOADS'],filename))
+    if(count[0][0]==1):
+        os.remove(os.path.join(app.config['UPLOADS'],filename))
     return redirect('/home')
 
 if __name__ == "__main__":
