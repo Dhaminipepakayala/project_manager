@@ -5,27 +5,64 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <style>
-     .danger{
-        background-color:red;
-     }
-    </style>
+    <link rel="stylesheet" href="{{url_for('static',filename='login.css')}}">
+   
 </head>
 <body>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-  {% for category, message in messages %}
-    <div class="{{ category }}">{{ message }}</div>
-  {% endfor %}
+ 
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+     
+     
+
+<div class="main">  	
+  <input type="checkbox" id="chk" aria-hidden="true">
+  <div class="signup">
+
+    <form action="/register1" method="POST">
+      <label for="chk" aria-hidden="true">Sign up</label>
+      <input type="text"  name="uname" placeholder="User name" required="">   
+      {% if (category== 'uname') %}
+      <div class="flash">{{ message }}</div>
+      {% endif %}
+
+      <input type="password"  name="password" placeholder="Password" required="">
+      {% if (category== 'pswd') %}
+        <div class="flash">{{ message }}</div>
+        {% endif %}
+
+
+      <input type="password"  name="confirm" placeholder="Repeat Password" required="">
+      {% if (category== 'confirm') %}
+        <div class="flash">{{ message }}</div>
+        {% endif %}
+      <button>sign up</button>
+    </form>
+    
+  </div>
+   
+
+    <div class="login">
+      <form action="/login" method="POST">
+        <label for="chk" aria-hidden="true">Login</label>
+        <input type="text" name="uname" placeholder="Username" required="">
+       
+
+
+        <input type="password" name="password" placeholder="Password" required="">
+        {% if (category == 'password') %}
+        <div class="flash">{{ message }}</div>
+        {% endif %}
+
+
+        <a href="" style="text-decoration:none;justify-content: center;display: flex;">Forgot password </a>
+        <button>Login</button>
+    </form>
+    </div>
+</div>
+{% endfor %}
 {% endwith %}
     
-    <form action="/login" method="POST">
-        <label for="uname">username:</label>
-        <input type="text" name="uname" id="uname"><br><br>
-        <label for="password">password</label>
-        <input type="password" name="password" id="password"><br><br>
-        <input type="submit" value="login">
-
-    </form>
-    <a href="{{ url_for('register') }}">register</a>
+    
 </body>
 </html>
